@@ -1,0 +1,126 @@
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    direction: rtl;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.logo {
+    max-width: 300px;
+    display: block;
+    margin: 0 auto 20px;
+}
+
+.business-name {
+    color: #C0A062;
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(74, 74, 74, 0.3);
+}
+
+.page-title {
+    color: #333;
+    text-align: center;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    margin-top: 10px;
+}
+
+#loginForm, #expenseForm {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+input, select, button {
+    margin-bottom: 10px;
+    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #C0A062;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #A88B4E;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: right;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #4A4A4A;
+    color: white;
+}
+
+.hidden {
+    display: none;
+}
+
+#summary {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.ingoing {
+    color: green;
+    font-weight: bold;
+}
+
+.outgoing {
+    color: red;
+    font-weight: bold;
+}
+
+#exportButton {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 10px;
+    }
+    .page-title {
+        font-size: 2em;
+    }
+    th, td {
+        padding: 8px;
+    }
+    .business-name {
+        font-size: 1em;
+    }
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متتبع المصروفات - صالون إكّة للعناية بالرجل</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <img src="logo.png" alt="شعار الشركة" class="logo">
+        <h2 class="business-name">Ekka Barbershop | صالون إكّة للعناية بالرجل</h2>
+        <h1 class="page-title">متتبع المصروفات</h1>
+        
+        <div id="loginForm">
+            <h2>تسجيل الدخول</h2>
+            <input type="text" id="username" placeholder="أدخل اسم المستخدم">
+            <button onclick="login()">دخول</button>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <h2>مرحبًا، <span id="userRole"></span></h2>
+            <div id="expenseForm">
+                <h3>إضافة مصروف</h3>
+                <input type="text" id="description" placeholder="الوصف">
+                <input type="number" id="amount" placeholder="المبلغ">
+                <input type="number" id="tax" placeholder="الضريبة (اختياري)">
+                <select id="type">
+                    <option value="ingoing">وارد</option>
+                    <option value="outgoing">صادر</option>
+                </select>
+                <input type="date" id="date">
+                <button onclick="submitExpense()">إضافة</button>
+            </div>
+
+            <h3>المصروفات</h3>
+            <table id="expenseTable">
+                <thead>
+                    <tr>
+                        <th>الوصف</th>
+                        <th>المبلغ</th>
+                        <th>النوع</th>
+                        <th>التاريخ</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div id="summary">
+                <p id="remaining"></p>
+                <p id="totals"></p>
+            </div>
+
+            <button id="exportButton" onclick="exportExpenses()" class="hidden">تصدير التقرير</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
