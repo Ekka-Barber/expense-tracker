@@ -26,7 +26,7 @@ function login() {
 
 function submitExpense() {
     if (!currentUser || !currentUser.permissions.includes('submit')) {
-        alert('ليس لديك صلاحية لإضافة مصروفات');
+        alert('ليس لديك صلاحية لإضافة قيود');
         return;
     }
 
@@ -37,8 +37,16 @@ function submitExpense() {
     const date = document.getElementById('date').value;
 
     if (description && !isNaN(amount) && date) {
-        const totalAmount = type === 'outgoing' ? amount + tax : amount;
-        expenses.push({ description, amount: totalAmount, originalAmount: amount, tax, type, date });
+        const totalAmount = type === 'مصروف' ? amount + tax : amount;
+        expenses.push({ 
+            description, 
+            amount: totalAmount, 
+            originalAmount: amount, 
+            tax, 
+            type, 
+            date,
+            addedBy: currentUser.username
+        });
         saveExpenses();
         updateUI();
         clearForm();
@@ -49,41 +57,42 @@ function submitExpense() {
 
 function editExpense(index) {
     if (!currentUser || !currentUser.permissions.includes('edit')) {
-        alert('ليس لديك صلاحية لتعديل المصروفات');
+        alert('ليس لديك صلاحية لتعديل القيود');
         return;
     }
 
     const expense = expenses[index];
     const newDescription = prompt('أدخل الوصف الجديد:', expense.description);
     const newAmount = parseFloat(prompt('أدخل المبلغ الجديد:', expense.originalAmount));
-    const newTax = parseFloat(prompt('أدخل الضريبة الجديدة:', expense.tax || 0));
-    const newType = prompt('أدخل النوع الجديد (وارد/صادر):', expense.type === 'ingoing' ? 'وارد' : 'صادر');
+    const newTax = parseFloat(prompt('أدخل الضريبة الجديدة (اختياري):', expense.tax || 0));
+    const newType = prompt('أدخل النوع الجديد (ايداع/مصروف):', expense.type);
     const newDate = prompt('أدخل التاريخ الجديد (YYYY-MM-DD):', expense.date);
 
-    if (newDescription && !isNaN(newAmount) && !isNaN(newTax) && (newType === 'وارد' || newType === 'صادر') && newDate) {
-        const newTotalAmount = newType === 'صادر' ? newAmount + newTax : newAmount;
+    if (newDescription && !isNaN(newAmount) && (newType === 'ايداع' || newType === 'مصروف') && newDate) {
+        const newTotalAmount = newType === 'مصروف' ? newAmount + (isNaN(newTax) ? 0 : newTax) : newAmount;
         expenses[index] = { 
             description: newDescription, 
             amount: newTotalAmount,
             originalAmount: newAmount,
-            tax: newTax,
-            type: newType === 'وارد' ? 'ingoing' : 'outgoing',
-            date: newDate
+            tax: isNaN(newTax) ? 0 : newTax,
+            type: newType,
+            date: newDate,
+            addedBy: expense.addedBy
         };
         saveExpenses();
         updateUI();
     } else {
-        alert('إدخال غير صالح. لم يتم تحديث المصروف.');
+        alert('إدخال غير صالح. لم يتم تحديث القيد.');
     }
 }
 
 function deleteExpense(index) {
     if (!currentUser || !currentUser.permissions.includes('delete')) {
-        alert('ليس لديك صلاحية لحذف المصروفات');
+        alert('ليس لديك صلاحية لحذف القيود');
         return;
     }
 
-    if (confirm('هل أنت متأكد من رغبتك في حذف هذا المصروف؟')) {
+    if (confirm('هل أنت متأكد من رغبتك في حذف هذا القيد؟')) {
         expenses.splice(index, 1);
         saveExpenses();
         updateUI();
@@ -94,8 +103,8 @@ function updateUI() {
     const tableBody = document.querySelector('#expenseTable tbody');
     tableBody.innerHTML = '';
 
-    let totalIngoing = 0;
-    let totalOutgoing = 0;
+    let totalDeposits = 0;
+    let totalExpenses = 0;
 
     expenses.forEach((expense, index) => {
         const row = tableBody.insertRow();
@@ -105,14 +114,15 @@ function updateUI() {
         if (expense.tax > 0) {
             amountCell.textContent += ` (شامل الضريبة: ${expense.tax.toFixed(2)} ر.س)`;
         }
-        amountCell.className = expense.type === 'ingoing' ? 'ingoing' : 'outgoing';
-        if (expense.type === 'outgoing') {
+        amountCell.className = expense.type === 'ايداع' ? 'ingoing' : 'outgoing';
+        if (expense.type === 'مصروف') {
             amountCell.textContent = '- ' + amountCell.textContent;
         }
-        row.insertCell(2).textContent = expense.type === 'ingoing' ? 'وارد' : 'صادر';
+        row.insertCell(2).textContent = expense.type;
         row.insertCell(3).textContent = expense.date;
+        row.insertCell(4).textContent = expense.addedBy;
 
-        const actionsCell = row.insertCell(4);
+        const actionsCell = row.insertCell(5);
         if (currentUser && currentUser.permissions.includes('edit')) {
             const editButton = document.createElement('button');
             editButton.textContent = 'تعديل';
@@ -126,18 +136,18 @@ function updateUI() {
             actionsCell.appendChild(deleteButton);
         }
 
-        if (expense.type === 'ingoing') {
-            totalIngoing += expense.amount;
+        if (expense.type === 'ايداع') {
+            totalDeposits += expense.amount;
         } else {
-            totalOutgoing += expense.amount;
+            totalExpenses += expense.amount;
         }
     });
 
-    const remaining = totalIngoing - totalOutgoing;
+    const remaining = totalDeposits - totalExpenses;
     document.getElementById('remaining').innerHTML = `المتبقي: ${remaining.toFixed(2)} ر.س`;
     document.getElementById('totals').innerHTML = `
-        إجمالي الوارد: ${totalIngoing.toFixed(2)} ر.س<br>
-        إجمالي الصادر: ${totalOutgoing.toFixed(2)} ر.س
+        إجمالي الايداعات: ${totalDeposits.toFixed(2)} ر.س<br>
+        إجمالي المصروفات: ${totalExpenses.toFixed(2)} ر.س
     `;
 
     if (currentUser) {
@@ -155,7 +165,7 @@ function clearForm() {
     document.getElementById('description').value = '';
     document.getElementById('amount').value = '';
     document.getElementById('tax').value = '';
-    document.getElementById('type').value = 'ingoing';
+    document.getElementById('type').value = 'مصروف';
     document.getElementById('date').value = '';
 }
 
@@ -177,7 +187,7 @@ function exportExpenses() {
     }
 
     const BOM = "\uFEFF";
-    let csvContent = BOM + "الوصف,المبلغ الأصلي,الضريبة,المبلغ الإجمالي,النوع,التاريخ\n";
+    let csvContent = BOM + "الوصف,المبلغ الأصلي,الضريبة,المبلغ الإجمالي,النوع,التاريخ,أضيف بواسطة\n";
 
     expenses.forEach(expense => {
         let row = [
@@ -185,8 +195,9 @@ function exportExpenses() {
             expense.originalAmount,
             expense.tax || 0,
             expense.amount,
-            expense.type === 'ingoing' ? 'وارد' : 'صادر',
-            expense.date
+            expense.type,
+            expense.date,
+            expense.addedBy
         ].join(",");
         csvContent += row + "\n";
     });
@@ -197,7 +208,7 @@ function exportExpenses() {
     if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", "expenses_report.csv");
+        link.setAttribute("download", "تقرير_القيود.csv");
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -205,7 +216,7 @@ function exportExpenses() {
     }
 }
 
-// Only update UI on page load if there are expenses to show
+// تحديث واجهة المستخدم عند تحميل الصفحة إذا كانت هناك قيود لعرضها
 if (expenses.length > 0) {
     updateUI();
 }
