@@ -129,3 +129,46 @@ th {
         font-size: 1em;
     }
 }
+
+/* Responsive table styles */
+@media screen and (max-width: 600px) {
+    table {
+        border: 0;
+    }
+    
+    table caption {
+        font-size: 1.3em;
+    }
+    
+    table thead {
+        display: none;
+    }
+    
+    table tr {
+        margin-bottom: 10px;
+        display: block;
+        border-bottom: 2px solid #ddd;
+    }
+    
+    table td {
+        display: block;
+        text-align: left;
+        font-size: 13px;
+        border-bottom: 1px dotted #ccc;
+    }
+    
+    table td:last-child {
+        border-bottom: 0;
+    }
+    
+    table td:before {
+        content: attr(data-label);
+        float: right;
+        font-weight: bold;
+    }
+    
+    .ingoing, .outgoing {
+        display: inline-block;
+        margin-right: 5px;
+    }
+}
