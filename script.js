@@ -65,7 +65,7 @@ function submitExpense() {
             tax, 
             type, 
             date,
-            paymentMethod, // New field added here
+            paymentMethod, 
             addedBy: currentUser.username 
         };
         push(expensesRef, newExpense);
@@ -127,8 +127,10 @@ function updateUI() {
 
     expenses.forEach((expense) => {
         const row = tableBody.insertRow();
-        row.insertCell(0).textContent = expense.description;
-        row.insertCell(0).setAttribute('data-label', 'الوصف');
+
+        const descriptionCell = row.insertCell(0);
+        descriptionCell.textContent = expense.description;
+        descriptionCell.setAttribute('data-label', 'الوصف');
         
         const amountCell = row.insertCell(1);
         const amount = Math.abs(expense.amount).toFixed(2);
@@ -147,7 +149,7 @@ function updateUI() {
         dateCell.setAttribute('data-label', 'التاريخ');
         
         const paymentMethodCell = row.insertCell(4);
-        paymentMethodCell.textContent = expense.paymentMethod; // New cell added here
+        paymentMethodCell.textContent = expense.paymentMethod; 
         paymentMethodCell.setAttribute('data-label', 'طريقة الدفع');
         
         const addedByCell = row.insertCell(5);
@@ -210,7 +212,7 @@ function exportExpenses() {
             expense.amount,
             expense.type,
             expense.date,
-            expense.paymentMethod, // Added to export
+            expense.paymentMethod, 
             expense.addedBy
         ].join(",");
         csvContent += row + "\n";
