@@ -101,6 +101,11 @@ th {
     font-weight: bold;
 }
 
+.tax {
+    font-size: 0.8em;
+    color: #666;
+}
+
 #exportButton {
     display: block;
     margin: 20px auto;
