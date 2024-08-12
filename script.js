@@ -219,3 +219,10 @@ function exportExpenses() {
 
 // Initialize Firebase and load expenses when the page loads
 window.onload = initializeFirebase;
+
+// Make functions globally accessible
+window.login = login;
+window.submitExpense = submitExpense;
+window.editExpense = editExpense;
+window.deleteExpense = deleteExpense;
+window.exportExpenses = exportExpenses;
