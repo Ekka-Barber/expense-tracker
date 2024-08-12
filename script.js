@@ -43,8 +43,8 @@ function login() {
         }
 
         if (!currentUser.permissions.includes('edit') && !currentUser.permissions.includes('delete')) {
-            document.querySelectorAll('.actions-header').forEach(header => header.style.display = 'none'); // Hide header
-            document.querySelectorAll('.actions-cell').forEach(cell => cell.style.display = 'none'); // Hide action cells
+            document.querySelector('th[data-label="الإجراءات"]').style.display = 'none'; // Hide the header
+            document.querySelectorAll('td[data-label="الإجراءات"]').forEach(cell => cell.style.display = 'none'); // Hide action cells
         }
         
         updateUI();
@@ -182,6 +182,9 @@ function updateUI() {
                 deleteButton.onclick = () => deleteExpense(expense.id);
                 actionsCell.appendChild(deleteButton);
             }
+        } else {
+            // Hide the column if the user is not an admin and doesn't have edit or delete permissions
+            row.insertCell(6).style.display = 'none';
         }
 
         if (expense.type === 'ايداع') {
