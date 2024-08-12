@@ -37,10 +37,27 @@ function login() {
         document.getElementById('dashboard').classList.remove('hidden');
         document.getElementById('userRole').textContent = `${currentUser.username} (${currentUser.role})`;
         document.getElementById('exportButton').classList.toggle('hidden', !currentUser.permissions.includes('export'));
+        
+        // Disable the form if the user doesn't have submission permissions
+        if (!currentUser.permissions.includes('submit')) {
+            disableForm();
+        }
+        
         updateUI();
     } else {
         alert('اسم مستخدم غير صالح');
     }
+}
+
+function disableForm() {
+    document.getElementById('description').disabled = true;
+    document.getElementById('amount').disabled = true;
+    document.getElementById('tax').disabled = true;
+    document.getElementById('type').disabled = true;
+    document.getElementById('paymentMethod').disabled = true;
+    document.getElementById('date').disabled = true;
+    document.getElementById('submitExpenseButton').disabled = true;
+    document.getElementById('submitExpenseButton').style.display = 'none'; // Optional: Hide the button
 }
 
 function submitExpense() {
