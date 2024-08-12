@@ -57,11 +57,15 @@ button {
     color: white;
     border: none;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.1s;
 }
 
 button:hover {
     background-color: #A88B4E;
+}
+
+button:active {
+    transform: scale(0.98);
 }
 
 table {
@@ -83,6 +87,13 @@ th {
 
 .hidden {
     display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.visible {
+    display: block;
+    opacity: 1;
 }
 
 #summary {
@@ -112,6 +123,7 @@ th {
     padding: 10px 20px;
 }
 
+/* Mobile Responsive Styles */
 @media (max-width: 600px) {
     body {
         padding: 10px;
@@ -122,16 +134,14 @@ th {
     .page-title {
         font-size: 2em;
     }
-    th, td {
-        padding: 8px;
-    }
     .business-name {
         font-size: 1em;
     }
-}
+    
+    input, select, button {
+        font-size: 16px; /* Prevents zooming on mobile when focusing inputs */
+    }
 
-/* Responsive table styles */
-@media screen and (max-width: 600px) {
     table {
         border: 0;
     }
@@ -141,34 +151,75 @@ th {
     }
     
     table thead {
-        display: none;
+        border: none;
+        clip: rect(0 0 0 0);
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        padding: 0;
+        position: absolute;
+        width: 1px;
     }
     
     table tr {
-        margin-bottom: 10px;
+        border-bottom: 3px solid #ddd;
         display: block;
-        border-bottom: 2px solid #ddd;
+        margin-bottom: .625em;
     }
     
     table td {
+        border-bottom: 1px solid #ddd;
         display: block;
-        text-align: left;
-        font-size: 13px;
-        border-bottom: 1px dotted #ccc;
+        font-size: .8em;
+        text-align: right;
+    }
+    
+    table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        text-transform: uppercase;
     }
     
     table td:last-child {
         border-bottom: 0;
     }
     
-    table td:before {
-        content: attr(data-label);
-        float: right;
-        font-weight: bold;
+    .actions-cell {
+        display: flex;
+        justify-content: space-around;
     }
     
-    .ingoing, .outgoing {
-        display: inline-block;
-        margin-right: 5px;
+    .actions-cell button {
+        width: auto;
+        padding: 5px 10px;
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    body {
+        background: white;
+        color: black;
+    }
+    .business-name, .page-title {
+        text-shadow: none;
+    }
+    button, th {
+        background-color: black;
+        color: white;
+    }
+    .ingoing {
+        color: darkgreen;
+    }
+    .outgoing {
+        color: darkred;
     }
 }
