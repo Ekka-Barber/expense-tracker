@@ -45,6 +45,9 @@ function loadExpenses() {
             });
         });
         updateUI();
+    }, (error) => {
+        console.error("Error loading expenses: ", error);
+        alert('حدث خطأ أثناء تحميل القيود. يرجى تحديث الصفحة والمحاولة مرة أخرى.');
     });
 }
 
@@ -63,7 +66,10 @@ function login() {
 
         // If user doesn't have edit or delete permissions, hide the actions column header
         if (!currentUser.permissions.includes('edit') && !currentUser.permissions.includes('delete')) {
-            document.querySelector('th[data-label="الإجراءات"]').style.display = 'none'; // Hide the header
+            const actionsHeader = document.querySelector('th:last-child');
+            if (actionsHeader) {
+                actionsHeader.style.display = 'none';
+            }
         }
         
         updateUI();
@@ -85,23 +91,31 @@ function submitExpense() {
     const date = document.getElementById('date').value;
     const paymentMethod = document.getElementById('paymentMethod').value;
 
-    if (description && !isNaN(amount) && date) {
-        const totalAmount = type === 'مصروف' ? amount + tax : amount;
-        const newExpense = { 
-            description, 
-            amount: totalAmount, 
-            originalAmount: amount, 
-            tax, 
-            type, 
-            date,
-            paymentMethod, 
-            addedBy: currentUser.username 
-        };
-        push(expensesRef, newExpense);
-        clearForm();
-    } else {
+    if (!description || isNaN(amount) || !date) {
         alert('الرجاء إدخال جميع البيانات المطلوبة');
+        return;
     }
+
+    const totalAmount = type === 'مصروف' ? amount + tax : amount;
+    const newExpense = { 
+        description, 
+        amount: totalAmount, 
+        originalAmount: amount, 
+        tax, 
+        type, 
+        date,
+        paymentMethod, 
+        addedBy: currentUser.username 
+    };
+
+    push(expensesRef, newExpense)
+        .then(() => {
+            clearForm();
+        })
+        .catch((error) => {
+            console.error("Error adding expense: ", error);
+            alert('حدث خطأ أثناء إضافة القيد. يرجى المحاولة مرة أخرى.');
+        });
 }
 
 function editExpense(id) {
@@ -130,7 +144,11 @@ function editExpense(id) {
             paymentMethod: newPaymentMethod,
             addedBy: expense.addedBy
         };
-        update(ref(database, `expenses/${id}`), updatedExpense);
+        update(ref(database, `expenses/${id}`), updatedExpense)
+            .catch((error) => {
+                console.error("Error updating expense: ", error);
+                alert('حدث خطأ أثناء تحديث القيد. يرجى المحاولة مرة أخرى.');
+            });
     } else {
         alert('إدخال غير صالح. لم يتم تحديث القيد.');
     }
@@ -143,7 +161,11 @@ function deleteExpense(id) {
     }
 
     if (confirm('هل أنت متأكد من رغبتك في حذف هذا القيد؟')) {
-        remove(ref(database, `expenses/${id}`));
+        remove(ref(database, `expenses/${id}`))
+            .catch((error) => {
+                console.error("Error deleting expense: ", error);
+                alert('حدث خطأ أثناء حذف القيد. يرجى المحاولة مرة أخرى.');
+            });
     }
 }
 
@@ -185,7 +207,7 @@ function updateUI() {
         addedByCell.textContent = users[expense.addedBy]?.displayName || expense.addedBy;
         addedByCell.setAttribute('data-label', 'أضيف بواسطة');
 
-        if (currentUser.permissions.includes('edit') || currentUser.permissions.includes('delete')) {
+        if (currentUser && (currentUser.permissions.includes('edit') || currentUser.permissions.includes('delete'))) {
             const actionsCell = row.insertCell(6);
             actionsCell.classList.add('actions-cell');
             actionsCell.setAttribute('data-label', 'الإجراءات');
@@ -201,9 +223,6 @@ function updateUI() {
                 deleteButton.onclick = () => deleteExpense(expense.id);
                 actionsCell.appendChild(deleteButton);
             }
-        } else {
-            // Hide the column if the user is not MAJED and doesn't have edit or delete permissions
-            row.deleteCell(6);  // Completely remove the cell
         }
 
         if (expense.type === 'ايداع') {
