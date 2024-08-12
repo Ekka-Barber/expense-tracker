@@ -112,6 +112,7 @@ th {
     padding: 10px 20px;
 }
 
+/* Adjust table cell display for mobile view */
 @media (max-width: 600px) {
     body {
         padding: 10px;
@@ -128,10 +129,7 @@ th {
     .business-name {
         font-size: 1em;
     }
-}
 
-/* Responsive table styles */
-@media screen and (max-width: 600px) {
     table {
         border: 0;
     }
@@ -152,8 +150,7 @@ th {
     
     table td {
         display: block;
-        text-align: left;
-        font-size: 13px;
+        text-align: right;
         border-bottom: 1px dotted #ccc;
     }
     
@@ -163,7 +160,7 @@ th {
     
     table td:before {
         content: attr(data-label);
-        float: right;
+        float: left;
         font-weight: bold;
     }
     
