@@ -1,4 +1,23 @@
-import { ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  // Your Firebase configuration object goes here
+  // For example:
+  // apiKey: "YOUR_API_KEY",
+  // authDomain: "YOUR_AUTH_DOMAIN",
+  // databaseURL: "YOUR_DATABASE_URL",
+  // projectId: "YOUR_PROJECT_ID",
+  // storageBucket: "YOUR_STORAGE_BUCKET",
+  // messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  // appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
 const users = {
     mjmj: { role: 'مدير', permissions: ['submit', 'edit', 'delete', 'view', 'export'], displayName: 'MAJED' },
@@ -12,7 +31,7 @@ let expenses = [];
 let expensesRef;
 
 function initializeFirebase() {
-    expensesRef = ref(window.database, 'expenses');
+    expensesRef = ref(database, 'expenses');
     loadExpenses();
 }
 
@@ -98,7 +117,7 @@ function editExpense(id) {
             date: newDate,
             addedBy: expense.addedBy
         };
-        update(ref(window.database, `expenses/${id}`), updatedExpense);
+        update(ref(database, `expenses/${id}`), updatedExpense);
     } else {
         alert('إدخال غير صالح. لم يتم تحديث القيد.');
     }
@@ -111,7 +130,7 @@ function deleteExpense(id) {
     }
 
     if (confirm('هل أنت متأكد من رغبتك في حذف هذا القيد؟')) {
-        remove(ref(window.database, `expenses/${id}`));
+        remove(ref(database, `expenses/${id}`));
     }
 }
 
