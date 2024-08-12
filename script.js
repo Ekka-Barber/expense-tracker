@@ -1,10 +1,10 @@
 import { ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 const users = {
-    mjmj: { role: 'مدير', permissions: ['submit', 'edit', 'delete', 'view', 'export'] },
-    slm: { role: 'المشرف المنفّذ', permissions: ['submit'] },
-    maz: { role: 'مشاهد', permissions: ['view'] },
-    fah: { role: 'مُدخل', permissions: ['submit', 'view'] }
+    mjmj: { role: 'مدير', permissions: ['submit', 'edit', 'delete', 'view', 'export'], displayName: 'MAJED' },
+    slm: { role: 'المشرف المنفّذ', permissions: ['submit'], displayName: 'ENG. Mo' },
+    maz: { role: 'مشاهد', permissions: ['view'], displayName: 'MAZ' },
+    fah: { role: 'مُدخل', permissions: ['submit', 'view'], displayName: 'FAHAD' }
 };
 
 let currentUser = null;
@@ -64,7 +64,7 @@ function submitExpense() {
             tax, 
             type, 
             date,
-            addedBy: currentUser.username
+            addedBy: currentUser.username // Use the current user's username for consistency
         };
         push(expensesRef, newExpense);
         clearForm();
@@ -124,17 +124,30 @@ function updateUI() {
     expenses.forEach((expense) => {
         const row = tableBody.insertRow();
         row.insertCell(0).textContent = expense.description;
+        row.insertCell(0).setAttribute('data-label', 'الوصف');
+        
         const amountCell = row.insertCell(1);
         const amount = Math.abs(expense.amount).toFixed(2);
         amountCell.innerHTML = `<span class="${expense.type === 'ايداع' ? 'ingoing' : 'outgoing'}">${expense.type === 'ايداع' ? '' : '-'} ${amount} ر.س</span>`;
         if (expense.tax > 0) {
             amountCell.innerHTML += ` <span class="tax">(شامل الضريبة: ${expense.tax.toFixed(2)} ر.س)</span>`;
         }
-        row.insertCell(2).textContent = expense.type;
-        row.insertCell(3).textContent = expense.date;
-        row.insertCell(4).textContent = expense.addedBy;
+        amountCell.setAttribute('data-label', 'المبلغ');
+        
+        const typeCell = row.insertCell(2);
+        typeCell.textContent = expense.type;
+        typeCell.setAttribute('data-label', 'النوع');
+        
+        const dateCell = row.insertCell(3);
+        dateCell.textContent = expense.date;
+        dateCell.setAttribute('data-label', 'التاريخ');
+        
+        const addedByCell = row.insertCell(4);
+        addedByCell.textContent = users[expense.addedBy]?.displayName || expense.addedBy;
+        addedByCell.setAttribute('data-label', 'أضيف بواسطة');
 
         const actionsCell = row.insertCell(5);
+        actionsCell.setAttribute('data-label', 'الإجراءات');
         if (currentUser && currentUser.permissions.includes('edit')) {
             const editButton = document.createElement('button');
             editButton.textContent = 'تعديل';
