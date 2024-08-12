@@ -3,37 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متتبع المصروفات - صالون إكّة للعناية بالرجل</title>
+    <title>متتبع القيود المالية</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <img src="logo.png" alt="شعار الشركة" class="logo">
         <h2 class="business-name">Ekka Barbershop | صالون إكّة للعناية بالرجل</h2>
-        <h1 class="page-title">متتبع المصروفات</h1>
-        
+        <h1 class="page-title">متتبع القيود المالية</h1>
+
         <div id="loginForm">
             <h2>تسجيل الدخول</h2>
-            <input type="text" id="username" placeholder="أدخل اسم المستخدم">
+            <input type="text" id="username" placeholder="اسم المستخدم">
             <button onclick="login()">دخول</button>
         </div>
 
         <div id="dashboard" class="hidden">
             <h2>مرحبًا، <span id="userRole"></span></h2>
+
             <div id="expenseForm">
-                <h3>إضافة مصروف</h3>
+                <h3>إضافة قيد</h3>
                 <input type="text" id="description" placeholder="الوصف">
                 <input type="number" id="amount" placeholder="المبلغ">
                 <input type="number" id="tax" placeholder="الضريبة (اختياري)">
                 <select id="type">
-                    <option value="ingoing">وارد</option>
-                    <option value="outgoing">صادر</option>
+                    <option value="مصروف">مصروف</option>
+                    <option value="ايداع">ايداع</option>
                 </select>
                 <input type="date" id="date">
                 <button onclick="submitExpense()">إضافة</button>
             </div>
 
-            <h3>المصروفات</h3>
+            <h3>القيود</h3>
             <table id="expenseTable">
                 <thead>
                     <tr>
@@ -41,10 +42,12 @@
                         <th>المبلغ</th>
                         <th>النوع</th>
                         <th>التاريخ</th>
+                        <th>أضيف بواسطة</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                </tbody>
             </table>
 
             <div id="summary">
@@ -52,10 +55,9 @@
                 <p id="totals"></p>
             </div>
 
-            <button id="exportButton" onclick="exportExpenses()" class="hidden">تصدير التقرير</button>
+            <button id="exportButton" onclick="exportExpenses()">تصدير التقرير</button>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
