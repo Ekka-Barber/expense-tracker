@@ -218,11 +218,11 @@ function exportExpenses() {
 }
 
 // Initialize Firebase and load expenses when the page loads
-window.onload = initializeFirebase;
+document.addEventListener('DOMContentLoaded', () => {
+    initializeFirebase();
 
-// Make functions globally accessible
-window.login = login;
-window.submitExpense = submitExpense;
-window.editExpense = editExpense;
-window.deleteExpense = deleteExpense;
-window.exportExpenses = exportExpenses;
+    // Add event listeners
+    document.getElementById('loginButton').addEventListener('click', login);
+    document.getElementById('submitExpenseButton').addEventListener('click', submitExpense);
+    document.getElementById('exportButton').addEventListener('click', exportExpenses);
+});
