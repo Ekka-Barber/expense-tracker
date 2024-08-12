@@ -1,22 +1,22 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
 import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  // Your Firebase configuration object goes here
-  // For example:
-  // apiKey: "YOUR_API_KEY",
-  // authDomain: "YOUR_AUTH_DOMAIN",
-  // databaseURL: "YOUR_DATABASE_URL",
-  // projectId: "YOUR_PROJECT_ID",
-  // storageBucket: "YOUR_STORAGE_BUCKET",
-  // messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  // appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyD9x2lcJGd4KTPOGJT49-QsM2n5z3PUvfU",
+  authDomain: "expense-tracker-7b367.firebaseapp.com",
+  projectId: "expense-tracker-7b367",
+  storageBucket: "expense-tracker-7b367.appspot.com",
+  messagingSenderId: "690346339497",
+  appId: "1:690346339497:web:97d8ef331833ade2e94db8",
+  measurementId: "G-1KYY5MP13V"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const database = getDatabase(app);
 
 const users = {
@@ -44,7 +44,6 @@ function loadExpenses() {
                 ...childSnapshot.val()
             });
         });
-        console.log('Expenses loaded:', expenses.length);
         updateUI();
     });
 }
@@ -57,6 +56,16 @@ function login() {
         document.getElementById('dashboard').classList.remove('hidden');
         document.getElementById('userRole').textContent = `${currentUser.username} (${currentUser.role})`;
         document.getElementById('exportButton').classList.toggle('hidden', !currentUser.permissions.includes('export'));
+
+        if (!currentUser.permissions.includes('submit')) {
+            document.getElementById('expenseForm').style.display = 'none'; // Hide the form for users who can't submit
+        }
+
+        // If user doesn't have edit or delete permissions, hide the actions column header
+        if (!currentUser.permissions.includes('edit') && !currentUser.permissions.includes('delete')) {
+            document.querySelector('th[data-label="الإجراءات"]').style.display = 'none'; // Hide the header
+        }
+        
         updateUI();
     } else {
         alert('اسم مستخدم غير صالح');
@@ -74,6 +83,7 @@ function submitExpense() {
     const tax = parseFloat(document.getElementById('tax').value) || 0;
     const type = document.getElementById('type').value;
     const date = document.getElementById('date').value;
+    const paymentMethod = document.getElementById('paymentMethod').value;
 
     if (description && !isNaN(amount) && date) {
         const totalAmount = type === 'مصروف' ? amount + tax : amount;
@@ -84,7 +94,8 @@ function submitExpense() {
             tax, 
             type, 
             date,
-            addedBy: currentUser.username
+            paymentMethod, 
+            addedBy: currentUser.username 
         };
         push(expensesRef, newExpense);
         clearForm();
@@ -105,6 +116,7 @@ function editExpense(id) {
     const newTax = parseFloat(prompt('أدخل الضريبة الجديدة (اختياري):', expense.tax || 0));
     const newType = prompt('أدخل النوع الجديد (ايداع/مصروف):', expense.type);
     const newDate = prompt('أدخل التاريخ الجديد (YYYY-MM-DD):', expense.date);
+    const newPaymentMethod = prompt('أدخل طريقة الدفع الجديدة (كاش/فيزا/مدى/حوالة بنكية):', expense.paymentMethod);
 
     if (newDescription && !isNaN(newAmount) && (newType === 'ايداع' || newType === 'مصروف') && newDate) {
         const newTotalAmount = newType === 'مصروف' ? newAmount + (isNaN(newTax) ? 0 : newTax) : newAmount;
@@ -115,6 +127,7 @@ function editExpense(id) {
             tax: isNaN(newTax) ? 0 : newTax,
             type: newType,
             date: newDate,
+            paymentMethod: newPaymentMethod,
             addedBy: expense.addedBy
         };
         update(ref(database, `expenses/${id}`), updatedExpense);
@@ -135,76 +148,64 @@ function deleteExpense(id) {
 }
 
 function updateUI() {
-    if (currentUser && currentUser.permissions.includes('view')) {
-        const tableBody = document.querySelector('#expenseTable tbody');
-        tableBody.innerHTML = '';
+    const tableBody = document.querySelector('#expenseTable tbody');
+    tableBody.innerHTML = '';
 
-        expenses.forEach((expense) => {
-            const row = tableBody.insertRow();
-            row.insertCell(0).textContent = expense.description;
-            row.insertCell(0).setAttribute('data-label', 'الوصف');
-            
-            const amountCell = row.insertCell(1);
-            const amount = Math.abs(expense.amount).toFixed(2);
-            amountCell.innerHTML = `<span class="${expense.type === 'ايداع' ? 'ingoing' : 'outgoing'}">${expense.type === 'ايداع' ? '' : '-'} ${amount} ر.س</span>`;
-            if (expense.tax > 0) {
-                amountCell.innerHTML += ` <span class="tax">(شامل الضريبة: ${expense.tax.toFixed(2)} ر.س)</span>`;
-            }
-            amountCell.setAttribute('data-label', 'المبلغ');
-            
-            const typeCell = row.insertCell(2);
-            typeCell.textContent = expense.type;
-            typeCell.setAttribute('data-label', 'النوع');
-            
-            const dateCell = row.insertCell(3);
-            dateCell.textContent = expense.date;
-            dateCell.setAttribute('data-label', 'التاريخ');
-            
-            const addedByCell = row.insertCell(4);
-            addedByCell.textContent = users[expense.addedBy]?.displayName || expense.addedBy;
-            addedByCell.setAttribute('data-label', 'أضيف بواسطة');
+    let totalDeposits = 0;
+    let totalExpenses = 0;
 
-            const actionsCell = row.insertCell(5);
+    expenses.forEach((expense) => {
+        const row = tableBody.insertRow();
+
+        const descriptionCell = row.insertCell(0);
+        descriptionCell.textContent = expense.description;
+        descriptionCell.setAttribute('data-label', 'الوصف');
+        
+        const amountCell = row.insertCell(1);
+        const amount = Math.abs(expense.amount).toFixed(2);
+        amountCell.innerHTML = `<span class="${expense.type === 'ايداع' ? 'ingoing' : 'outgoing'}">${expense.type === 'ايداع' ? '' : '-'} ${amount} ر.س</span>`;
+        if (expense.tax > 0) {
+            amountCell.innerHTML += ` <span class="tax">(شامل الضريبة: ${expense.tax.toFixed(2)} ر.س)</span>`;
+        }
+        amountCell.setAttribute('data-label', 'المبلغ');
+        
+        const typeCell = row.insertCell(2);
+        typeCell.textContent = expense.type;
+        typeCell.setAttribute('data-label', 'النوع');
+        
+        const dateCell = row.insertCell(3);
+        dateCell.textContent = expense.date;
+        dateCell.setAttribute('data-label', 'التاريخ');
+        
+        const paymentMethodCell = row.insertCell(4);
+        paymentMethodCell.textContent = expense.paymentMethod; 
+        paymentMethodCell.setAttribute('data-label', 'طريقة الدفع');
+        
+        const addedByCell = row.insertCell(5);
+        addedByCell.textContent = users[expense.addedBy]?.displayName || expense.addedBy;
+        addedByCell.setAttribute('data-label', 'أضيف بواسطة');
+
+        if (currentUser.permissions.includes('edit') || currentUser.permissions.includes('delete')) {
+            const actionsCell = row.insertCell(6);
+            actionsCell.classList.add('actions-cell');
             actionsCell.setAttribute('data-label', 'الإجراءات');
-            if (currentUser && currentUser.permissions.includes('edit')) {
+            if (currentUser.permissions.includes('edit')) {
                 const editButton = document.createElement('button');
                 editButton.textContent = 'تعديل';
                 editButton.onclick = () => editExpense(expense.id);
                 actionsCell.appendChild(editButton);
             }
-            if (currentUser && currentUser.permissions.includes('delete')) {
+            if (currentUser.permissions.includes('delete')) {
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'حذف';
                 deleteButton.onclick = () => deleteExpense(expense.id);
                 actionsCell.appendChild(deleteButton);
             }
-        });
+        } else {
+            // Hide the column if the user is not MAJED and doesn't have edit or delete permissions
+            row.deleteCell(6);  // Completely remove the cell
+        }
 
-        updateSummary();
-    } else {
-        // Hide table if user doesn't have view permission
-        document.querySelector('#expenseTable').classList.add('hidden');
-    }
-
-    // Update other UI elements based on permissions
-    if (currentUser) {
-        document.getElementById('expenseForm').style.display = 
-            currentUser.permissions.includes('submit') ? 'block' : 'none';
-        document.getElementById('exportButton').style.display = 
-            currentUser.permissions.includes('export') ? 'block' : 'none';
-    } else {
-        document.getElementById('expenseForm').style.display = 'none';
-        document.getElementById('exportButton').style.display = 'none';
-    }
-
-    console.log('UI updated for user:', currentUser ? currentUser.username : 'No user');
-}
-
-function updateSummary() {
-    let totalDeposits = 0;
-    let totalExpenses = 0;
-
-    expenses.forEach((expense) => {
         if (expense.type === 'ايداع') {
             totalDeposits += expense.amount;
         } else {
@@ -218,8 +219,6 @@ function updateSummary() {
         إجمالي الايداعات: ${totalDeposits.toFixed(2)} ر.س<br>
         إجمالي المصروفات: ${totalExpenses.toFixed(2)} ر.س
     `;
-
-    console.log('Summary updated');
 }
 
 function clearForm() {
@@ -228,6 +227,7 @@ function clearForm() {
     document.getElementById('tax').value = '';
     document.getElementById('type').value = 'مصروف';
     document.getElementById('date').value = '';
+    document.getElementById('paymentMethod').value = 'كاش'; // Reset payment method to default
 }
 
 function exportExpenses() {
@@ -237,7 +237,7 @@ function exportExpenses() {
     }
 
     const BOM = "\uFEFF";
-    let csvContent = BOM + "الوصف,المبلغ الأصلي,الضريبة,المبلغ الإجمالي,النوع,التاريخ,أضيف بواسطة\n";
+    let csvContent = BOM + "الوصف,المبلغ الأصلي,الضريبة,المبلغ الإجمالي,النوع,التاريخ,طريقة الدفع,أضيف بواسطة\n";
 
     expenses.forEach(expense => {
         let row = [
@@ -247,6 +247,7 @@ function exportExpenses() {
             expense.amount,
             expense.type,
             expense.date,
+            expense.paymentMethod, 
             expense.addedBy
         ].join(",");
         csvContent += row + "\n";
