@@ -1,3 +1,5 @@
+import { ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
 const users = {
     mjmj: { role: 'مدير', permissions: ['submit', 'edit', 'delete', 'view', 'export'] },
     slm: { role: 'المشرف المنفّذ', permissions: ['submit'] },
@@ -7,8 +9,25 @@ const users = {
 
 let currentUser = null;
 let expenses = [];
+let expensesRef;
 
-loadExpenses();
+function initializeFirebase() {
+    expensesRef = ref(window.database, 'expenses');
+    loadExpenses();
+}
+
+function loadExpenses() {
+    onValue(expensesRef, (snapshot) => {
+        expenses = [];
+        snapshot.forEach((childSnapshot) => {
+            expenses.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
+        });
+        updateUI();
+    });
+}
 
 function login() {
     const username = document.getElementById('username').value;
@@ -38,7 +57,7 @@ function submitExpense() {
 
     if (description && !isNaN(amount) && date) {
         const totalAmount = type === 'مصروف' ? amount + tax : amount;
-        expenses.push({ 
+        const newExpense = { 
             description, 
             amount: totalAmount, 
             originalAmount: amount, 
@@ -46,22 +65,21 @@ function submitExpense() {
             type, 
             date,
             addedBy: currentUser.username
-        });
-        saveExpenses();
-        updateUI();
+        };
+        push(expensesRef, newExpense);
         clearForm();
     } else {
         alert('الرجاء إدخال جميع البيانات المطلوبة');
     }
 }
 
-function editExpense(index) {
+function editExpense(id) {
     if (!currentUser || !currentUser.permissions.includes('edit')) {
         alert('ليس لديك صلاحية لتعديل القيود');
         return;
     }
 
-    const expense = expenses[index];
+    const expense = expenses.find(e => e.id === id);
     const newDescription = prompt('أدخل الوصف الجديد:', expense.description);
     const newAmount = parseFloat(prompt('أدخل المبلغ الجديد:', expense.originalAmount));
     const newTax = parseFloat(prompt('أدخل الضريبة الجديدة (اختياري):', expense.tax || 0));
@@ -70,7 +88,7 @@ function editExpense(index) {
 
     if (newDescription && !isNaN(newAmount) && (newType === 'ايداع' || newType === 'مصروف') && newDate) {
         const newTotalAmount = newType === 'مصروف' ? newAmount + (isNaN(newTax) ? 0 : newTax) : newAmount;
-        expenses[index] = { 
+        const updatedExpense = { 
             description: newDescription, 
             amount: newTotalAmount,
             originalAmount: newAmount,
@@ -79,23 +97,20 @@ function editExpense(index) {
             date: newDate,
             addedBy: expense.addedBy
         };
-        saveExpenses();
-        updateUI();
+        update(ref(window.database, `expenses/${id}`), updatedExpense);
     } else {
         alert('إدخال غير صالح. لم يتم تحديث القيد.');
     }
 }
 
-function deleteExpense(index) {
+function deleteExpense(id) {
     if (!currentUser || !currentUser.permissions.includes('delete')) {
         alert('ليس لديك صلاحية لحذف القيود');
         return;
     }
 
     if (confirm('هل أنت متأكد من رغبتك في حذف هذا القيد؟')) {
-        expenses.splice(index, 1);
-        saveExpenses();
-        updateUI();
+        remove(ref(window.database, `expenses/${id}`));
     }
 }
 
@@ -106,17 +121,14 @@ function updateUI() {
     let totalDeposits = 0;
     let totalExpenses = 0;
 
-    expenses.forEach((expense, index) => {
+    expenses.forEach((expense) => {
         const row = tableBody.insertRow();
         row.insertCell(0).textContent = expense.description;
         const amountCell = row.insertCell(1);
-        amountCell.textContent = `${Math.abs(expense.amount).toFixed(2)} ر.س`;
+        const amount = Math.abs(expense.amount).toFixed(2);
+        amountCell.innerHTML = `<span class="${expense.type === 'ايداع' ? 'ingoing' : 'outgoing'}">${expense.type === 'ايداع' ? '' : '-'} ${amount} ر.س</span>`;
         if (expense.tax > 0) {
-            amountCell.textContent += ` (شامل الضريبة: ${expense.tax.toFixed(2)} ر.س)`;
-        }
-        amountCell.className = expense.type === 'ايداع' ? 'ingoing' : 'outgoing';
-        if (expense.type === 'مصروف') {
-            amountCell.textContent = '- ' + amountCell.textContent;
+            amountCell.innerHTML += ` <span class="tax">(شامل الضريبة: ${expense.tax.toFixed(2)} ر.س)</span>`;
         }
         row.insertCell(2).textContent = expense.type;
         row.insertCell(3).textContent = expense.date;
@@ -126,13 +138,13 @@ function updateUI() {
         if (currentUser && currentUser.permissions.includes('edit')) {
             const editButton = document.createElement('button');
             editButton.textContent = 'تعديل';
-            editButton.onclick = () => editExpense(index);
+            editButton.onclick = () => editExpense(expense.id);
             actionsCell.appendChild(editButton);
         }
         if (currentUser && currentUser.permissions.includes('delete')) {
             const deleteButton = document.createElement('button');
             deleteButton.textContent = 'حذف';
-            deleteButton.onclick = () => deleteExpense(index);
+            deleteButton.onclick = () => deleteExpense(expense.id);
             actionsCell.appendChild(deleteButton);
         }
 
@@ -167,17 +179,6 @@ function clearForm() {
     document.getElementById('tax').value = '';
     document.getElementById('type').value = 'مصروف';
     document.getElementById('date').value = '';
-}
-
-function saveExpenses() {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-}
-
-function loadExpenses() {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) {
-        expenses = JSON.parse(savedExpenses);
-    }
 }
 
 function exportExpenses() {
@@ -216,7 +217,5 @@ function exportExpenses() {
     }
 }
 
-// تحديث واجهة المستخدم عند تحميل الصفحة إذا كانت هناك قيود لعرضها
-if (expenses.length > 0) {
-    updateUI();
-}
+// Initialize Firebase and load expenses when the page loads
+window.onload = initializeFirebase;
