@@ -15,7 +15,7 @@
         <div id="loginForm">
             <h2>تسجيل الدخول</h2>
             <input type="text" id="username" placeholder="اسم المستخدم">
-            <button onclick="window.login()">دخول</button>
+            <button id="loginButton">دخول</button>
         </div>
 
         <div id="dashboard" class="hidden">
@@ -31,7 +31,7 @@
                     <option value="ايداع">ايداع</option>
                 </select>
                 <input type="date" id="date">
-                <button onclick="window.submitExpense()">إضافة</button>
+                <button id="submitExpenseButton">إضافة</button>
             </div>
 
             <h3>القيود</h3>
@@ -55,7 +55,7 @@
                 <p id="totals"></p>
             </div>
 
-            <button id="exportButton" onclick="window.exportExpenses()">تصدير التقرير</button>
+            <button id="exportButton">تصدير التقرير</button>
         </div>
     </div>
 
