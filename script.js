@@ -37,27 +37,20 @@ function login() {
         document.getElementById('dashboard').classList.remove('hidden');
         document.getElementById('userRole').textContent = `${currentUser.username} (${currentUser.role})`;
         document.getElementById('exportButton').classList.toggle('hidden', !currentUser.permissions.includes('export'));
-        
-        // Disable the form if the user doesn't have submission permissions
+
         if (!currentUser.permissions.includes('submit')) {
-            disableForm();
+            document.getElementById('expenseForm').style.display = 'none'; // Hide the form for users who can't submit
+        }
+
+        if (!currentUser.permissions.includes('edit') && !currentUser.permissions.includes('delete')) {
+            document.querySelectorAll('.actions-header').forEach(header => header.style.display = 'none'); // Hide header
+            document.querySelectorAll('.actions-cell').forEach(cell => cell.style.display = 'none'); // Hide action cells
         }
         
         updateUI();
     } else {
         alert('اسم مستخدم غير صالح');
     }
-}
-
-function disableForm() {
-    document.getElementById('description').disabled = true;
-    document.getElementById('amount').disabled = true;
-    document.getElementById('tax').disabled = true;
-    document.getElementById('type').disabled = true;
-    document.getElementById('paymentMethod').disabled = true;
-    document.getElementById('date').disabled = true;
-    document.getElementById('submitExpenseButton').disabled = true;
-    document.getElementById('submitExpenseButton').style.display = 'none'; // Optional: Hide the button
 }
 
 function submitExpense() {
@@ -173,19 +166,22 @@ function updateUI() {
         addedByCell.textContent = users[expense.addedBy]?.displayName || expense.addedBy;
         addedByCell.setAttribute('data-label', 'أضيف بواسطة');
 
-        const actionsCell = row.insertCell(6);
-        actionsCell.setAttribute('data-label', 'الإجراءات');
-        if (currentUser && currentUser.permissions.includes('edit')) {
-            const editButton = document.createElement('button');
-            editButton.textContent = 'تعديل';
-            editButton.onclick = () => editExpense(expense.id);
-            actionsCell.appendChild(editButton);
-        }
-        if (currentUser && currentUser.permissions.includes('delete')) {
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'حذف';
-            deleteButton.onclick = () => deleteExpense(expense.id);
-            actionsCell.appendChild(deleteButton);
+        if (currentUser.permissions.includes('edit') || currentUser.permissions.includes('delete')) {
+            const actionsCell = row.insertCell(6);
+            actionsCell.classList.add('actions-cell');
+            actionsCell.setAttribute('data-label', 'الإجراءات');
+            if (currentUser.permissions.includes('edit')) {
+                const editButton = document.createElement('button');
+                editButton.textContent = 'تعديل';
+                editButton.onclick = () => editExpense(expense.id);
+                actionsCell.appendChild(editButton);
+            }
+            if (currentUser.permissions.includes('delete')) {
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'حذف';
+                deleteButton.onclick = () => deleteExpense(expense.id);
+                actionsCell.appendChild(deleteButton);
+            }
         }
 
         if (expense.type === 'ايداع') {
