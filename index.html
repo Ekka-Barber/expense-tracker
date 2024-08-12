@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متتبع القيود المالية</title>
+    <title>متتبع القيود المالية | Ekka Barbershop</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -30,12 +30,6 @@
                     <option value="مصروف">مصروف</option>
                     <option value="ايداع">ايداع</option>
                 </select>
-                <select id="paymentMethod">
-                    <option value="كاش">كاش</option>
-                    <option value="فيزا">فيزا</option>
-                    <option value="مدى">مدى</option>
-                    <option value="حوالة بنكية">حوالة بنكية</option>
-                </select>
                 <input type="date" id="date">
                 <button id="submitExpenseButton">إضافة</button>
             </div>
@@ -48,50 +42,24 @@
                         <th>المبلغ</th>
                         <th>النوع</th>
                         <th>التاريخ</th>
-                        <th>طريقة الدفع</th>
                         <th>أضيف بواسطة</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Expense rows will be added here dynamically -->
                 </tbody>
             </table>
 
             <div id="summary">
-                <p id="remaining"></p>
                 <p id="totals"></p>
+                <p id="remaining"></p>
             </div>
 
             <button id="exportButton">تصدير التقرير</button>
         </div>
     </div>
 
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-        import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyD9x2lcJGd4KTPOGJT49-QsM2n5z3PUvfU",
-            authDomain: "expense-tracker-7b367.firebaseapp.com",
-            projectId: "expense-tracker-7b367",
-            storageBucket: "expense-tracker-7b367.appspot.com",
-            messagingSenderId: "690346339497",
-            appId: "1:690346339497:web:97d8ef331833ade2e94db8",
-            measurementId: "G-1KYY5MP13V"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const database = getDatabase(app);
-
-        // Make Firebase services available globally
-        window.app = app;
-        window.database = database;
-    </script>
-    <script src="script.js" type="module"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
