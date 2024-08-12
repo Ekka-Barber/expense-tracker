@@ -54,6 +54,7 @@ function submitExpense() {
     const tax = parseFloat(document.getElementById('tax').value) || 0;
     const type = document.getElementById('type').value;
     const date = document.getElementById('date').value;
+    const paymentMethod = document.getElementById('paymentMethod').value;
 
     if (description && !isNaN(amount) && date) {
         const totalAmount = type === 'مصروف' ? amount + tax : amount;
@@ -64,7 +65,8 @@ function submitExpense() {
             tax, 
             type, 
             date,
-            addedBy: currentUser.username // Use the current user's username for consistency
+            paymentMethod, // New field added here
+            addedBy: currentUser.username 
         };
         push(expensesRef, newExpense);
         clearForm();
@@ -85,6 +87,7 @@ function editExpense(id) {
     const newTax = parseFloat(prompt('أدخل الضريبة الجديدة (اختياري):', expense.tax || 0));
     const newType = prompt('أدخل النوع الجديد (ايداع/مصروف):', expense.type);
     const newDate = prompt('أدخل التاريخ الجديد (YYYY-MM-DD):', expense.date);
+    const newPaymentMethod = prompt('أدخل طريقة الدفع الجديدة (كاش/فيزا/مدى/حوالة بنكية):', expense.paymentMethod);
 
     if (newDescription && !isNaN(newAmount) && (newType === 'ايداع' || newType === 'مصروف') && newDate) {
         const newTotalAmount = newType === 'مصروف' ? newAmount + (isNaN(newTax) ? 0 : newTax) : newAmount;
@@ -95,6 +98,7 @@ function editExpense(id) {
             tax: isNaN(newTax) ? 0 : newTax,
             type: newType,
             date: newDate,
+            paymentMethod: newPaymentMethod,
             addedBy: expense.addedBy
         };
         update(ref(window.database, `expenses/${id}`), updatedExpense);
@@ -142,11 +146,15 @@ function updateUI() {
         dateCell.textContent = expense.date;
         dateCell.setAttribute('data-label', 'التاريخ');
         
-        const addedByCell = row.insertCell(4);
+        const paymentMethodCell = row.insertCell(4);
+        paymentMethodCell.textContent = expense.paymentMethod; // New cell added here
+        paymentMethodCell.setAttribute('data-label', 'طريقة الدفع');
+        
+        const addedByCell = row.insertCell(5);
         addedByCell.textContent = users[expense.addedBy]?.displayName || expense.addedBy;
         addedByCell.setAttribute('data-label', 'أضيف بواسطة');
 
-        const actionsCell = row.insertCell(5);
+        const actionsCell = row.insertCell(6);
         actionsCell.setAttribute('data-label', 'الإجراءات');
         if (currentUser && currentUser.permissions.includes('edit')) {
             const editButton = document.createElement('button');
@@ -174,16 +182,6 @@ function updateUI() {
         إجمالي الايداعات: ${totalDeposits.toFixed(2)} ر.س<br>
         إجمالي المصروفات: ${totalExpenses.toFixed(2)} ر.س
     `;
-
-    if (currentUser) {
-        document.getElementById('expenseForm').style.display = 
-            currentUser.permissions.includes('submit') ? 'block' : 'none';
-        document.getElementById('exportButton').style.display = 
-            currentUser.permissions.includes('export') ? 'block' : 'none';
-    } else {
-        document.getElementById('expenseForm').style.display = 'none';
-        document.getElementById('exportButton').style.display = 'none';
-    }
 }
 
 function clearForm() {
@@ -192,6 +190,7 @@ function clearForm() {
     document.getElementById('tax').value = '';
     document.getElementById('type').value = 'مصروف';
     document.getElementById('date').value = '';
+    document.getElementById('paymentMethod').value = 'كاش'; // Reset payment method to default
 }
 
 function exportExpenses() {
@@ -201,7 +200,7 @@ function exportExpenses() {
     }
 
     const BOM = "\uFEFF";
-    let csvContent = BOM + "الوصف,المبلغ الأصلي,الضريبة,المبلغ الإجمالي,النوع,التاريخ,أضيف بواسطة\n";
+    let csvContent = BOM + "الوصف,المبلغ الأصلي,الضريبة,المبلغ الإجمالي,النوع,التاريخ,طريقة الدفع,أضيف بواسطة\n";
 
     expenses.forEach(expense => {
         let row = [
@@ -211,6 +210,7 @@ function exportExpenses() {
             expense.amount,
             expense.type,
             expense.date,
+            expense.paymentMethod, // Added to export
             expense.addedBy
         ].join(",");
         csvContent += row + "\n";
