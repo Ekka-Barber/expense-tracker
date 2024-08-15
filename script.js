@@ -44,9 +44,11 @@ function loadExpenses() {
                 ...childSnapshot.val()
             });
         });
+        // Sort expenses by date, oldest first
+        expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
         updateUI();
     }, (error) => {
-        console.error("خطأ في تحميل القيود: ", error);
+        console.error("Error loading expenses: ", error);
         alert('حدث خطأ أثناء تحميل القيود. يرجى تحديث الصفحة والمحاولة مرة أخرى.');
     });
 }
@@ -61,9 +63,10 @@ function login() {
         document.getElementById('exportButton').classList.toggle('hidden', !currentUser.permissions.includes('export'));
 
         if (!currentUser.permissions.includes('submit')) {
-            document.getElementById('expenseForm').style.display = 'none';
+            document.getElementById('expenseForm').style.display = 'none'; // Hide the form for users who can't submit
         }
 
+        // If user doesn't have edit or delete permissions, hide the actions column header
         if (!currentUser.permissions.includes('edit') && !currentUser.permissions.includes('delete')) {
             const actionsHeader = document.querySelector('th:last-child');
             if (actionsHeader) {
@@ -112,7 +115,7 @@ function submitExpense() {
             clearForm();
         })
         .catch((error) => {
-            console.error("خطأ في إضافة القيد: ", error);
+            console.error("Error adding expense: ", error);
             alert('حدث خطأ أثناء إضافة القيد. يرجى المحاولة مرة أخرى.');
         });
 }
@@ -128,7 +131,7 @@ function editExpense(id) {
     const newAmount = parseFloat(prompt('أدخل المبلغ الجديد:', expense.originalAmount));
     const newTax = parseFloat(prompt('أدخل الضريبة الجديدة (اختياري):', expense.tax || 0));
     const newType = prompt('أدخل النوع الجديد (ايداع/مصروف):', expense.type);
-    const newDate = prompt('أدخل التاريخ الجديد (يوم-شهر-سنة):', expense.date);
+    const newDate = prompt('أدخل التاريخ الجديد (YYYY-MM-DD):', expense.date);
     const newPaymentMethod = prompt('أدخل طريقة الدفع الجديدة (كاش/فيزا/مدى/حوالة بنكية):', expense.paymentMethod);
 
     if (newDescription && !isNaN(newAmount) && (newType === 'ايداع' || newType === 'مصروف') && newDate) {
@@ -145,7 +148,7 @@ function editExpense(id) {
         };
         update(ref(database, `expenses/${id}`), updatedExpense)
             .catch((error) => {
-                console.error("خطأ في تحديث القيد: ", error);
+                console.error("Error updating expense: ", error);
                 alert('حدث خطأ أثناء تحديث القيد. يرجى المحاولة مرة أخرى.');
             });
     } else {
@@ -162,7 +165,7 @@ function deleteExpense(id) {
     if (confirm('هل أنت متأكد من رغبتك في حذف هذا القيد؟')) {
         remove(ref(database, `expenses/${id}`))
             .catch((error) => {
-                console.error("خطأ في حذف القيد: ", error);
+                console.error("Error deleting expense: ", error);
                 alert('حدث خطأ أثناء حذف القيد. يرجى المحاولة مرة أخرى.');
             });
     }
@@ -245,7 +248,7 @@ function clearForm() {
     document.getElementById('tax').value = '';
     document.getElementById('type').value = 'مصروف';
     document.getElementById('date').value = '';
-    document.getElementById('paymentMethod').value = 'كاش';
+    document.getElementById('paymentMethod').value = 'كاش'; // Reset payment method to default
 }
 
 function exportExpenses() {
